@@ -5,7 +5,15 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 class MapScreen extends StatelessWidget {
   const MapScreen({Key? key}) : super(key: key);
   final LatLng _center = const LatLng(13.729273, 100.775390);
-  final accident = const ['Accident 1', 'Accident 2', 'Accident 3'];
+  final accident = const [
+    'Accident 1',
+    'Accident 2',
+    'Accident 3',
+    'Accident 4',
+    'Accident 5',
+    'Accident 6',
+    'Accident 7'
+  ];
   @override
   Widget build(BuildContext context) {
     late GoogleMapController mapController;
@@ -34,11 +42,24 @@ class MapScreen extends StatelessWidget {
                             color: Theme.of(context).primaryColor, width: 3),
                         borderRadius: BorderRadius.circular(10)),
                     child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      margin: EdgeInsets.symmetric(horizontal: 10),
                       child: TextField(
                         decoration: InputDecoration(border: InputBorder.none),
                       ),
                     )),
+                SizedBox(height: 10),
+                Container(
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(3)),
+                  width: MediaQuery.of(context).size.width,
+                  child: Center(
+                      child: Text(
+                    'Search',
+                    style: TextStyle(color: Colors.white),
+                  )),
+                ),
                 SizedBox(height: 10),
                 Divider(
                   color: Theme.of(context).primaryColor.withOpacity(0.5),
@@ -78,9 +99,20 @@ class MapScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total : '),
-                    Text(accident.length.toString())
+                    Text(
+                      'Total : ',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                    Text(
+                      accident.length.toString(),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    )
                   ],
+                ),
+                SizedBox(
+                  height: 30,
                 )
               ],
             ),

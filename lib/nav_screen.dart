@@ -24,7 +24,7 @@ class _NavScreenState extends State<NavScreen> {
     return Scaffold(
       drawer: const Drawer(),
       appBar: AppBar(
-        title: const Text('TrafficAnomaly'),
+        title: const Text('Traffic Anomaly Detector'),
       ),
       body: _selectedIndex == 0 ? const MapScreen() : const JsScreen(),
       bottomNavigationBar: BottomNavigationBar(
@@ -34,8 +34,8 @@ class _NavScreenState extends State<NavScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Business',
+            icon: Icon(Icons.access_alarm),
+            label: 'Accident',
           ),
         ],
         currentIndex: _selectedIndex,
