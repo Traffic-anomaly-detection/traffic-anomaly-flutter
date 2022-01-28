@@ -42,6 +42,15 @@ class _MapScreenState extends State<MapScreen> {
       );
     }).toList();
 
+    List<Marker> myMarker = [];
+    myMarker.add(Marker(
+      markerId: MarkerId('test'),
+      position: LatLng(13.729273, 100.775390),
+      onTap: () {
+        setState(() {});
+      },
+    ));
+
     void _onMapCreated(GoogleMapController controller) {
       mapController = controller;
     }
@@ -334,6 +343,7 @@ class _MapScreenState extends State<MapScreen> {
                   target: _center,
                   zoom: 11.0,
                 ),
+                markers: myMarker.toSet(),
               ),
               Builder(builder: (context) {
                 if (_isShowInfo) {
