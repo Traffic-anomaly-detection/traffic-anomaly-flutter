@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:traffic_anomaly_app/accident.dart';
+import 'package:traffic_anomaly_app/modelService.dart';
 import 'accidentService.dart';
 
 class MapScreen extends StatefulWidget {
@@ -23,6 +26,17 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     getAllAccident();
+    predictAccident();
+  }
+
+  void predictAccident() async {
+    var entries = [
+      [1.0, 1.0, 54.0, 54.0, 61.0],
+      [0.0, 0.0, 0.0, 0.0, 0.0],
+      [4.0, 2.0, 64.0, 87.0, 60.0]
+    ];
+    var test = await ModelService().predictDecisionTree(entries);
+    log('predict result : ' + test.toString());
   }
 
   void getAllAccident() async {
