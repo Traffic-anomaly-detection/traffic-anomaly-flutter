@@ -38,6 +38,7 @@ dependencies:
   google_maps_flutter_web: ^0.3.2+1
   font_awesome_flutter: ^9.2.0
   http: ^0.13.4
+  dart_jsonwebtoken: ^2.4.1
   # longdo_maps_flutter: ^1.0.1
 
 dev_dependencies:
