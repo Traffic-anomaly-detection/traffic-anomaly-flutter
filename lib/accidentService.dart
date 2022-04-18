@@ -19,10 +19,6 @@ class AccidentService {
       log('ERROR : Cannot get accident');
     }
 
-    // List<Accident> accidents = map.entries.map((e) => {
-    //   Accident.fromJson(e)
-    // }).toList() ;
-
     return accidents;
   }
 }

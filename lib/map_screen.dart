@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'package:csv/csv.dart' as csv;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:traffic_anomaly_app/accident.dart';
@@ -22,21 +24,40 @@ class _MapScreenState extends State<MapScreen> {
   bool _isShowInfo = false;
   late Future<List<Accident>> accidents;
 
+  late List<List> roadData;
+
   @override
   void initState() {
     super.initState();
+    loadRoadData();
     getAllAccident();
     predictAccident();
   }
 
+  Future<void> loadRoadData() async {
+    print('Start loading road coordinates .....');
+
+    roadData = await ModelService().getRoadData();
+
+    print('Loading road data complete\n\n\n');
+  }
+
+  Future<List<List>> getCurrentCellData() async {
+    print('Start loading current cell data .....');
+    var currentCellData = await ModelService().getCurrentCellData(roadNo: 1);
+    print('Loading current cell data complete\n\n\n');
+    //var entries = ModelService().getPredictableList(currentCellData);
+    print("current cell data [0-4] : " + currentCellData.take(5).toString());
+    // log("entries : " + entries.toString());
+    // log("entries length : " + entries.length.toString());
+    return currentCellData;
+  }
+
   void predictAccident() async {
-    var entries = [
-      [1.0, 1.0, 54.0, 54.0, 61.0],
-      [0.0, 0.0, 0.0, 0.0, 0.0],
-      [4.0, 2.0, 64.0, 87.0, 60.0]
-    ];
+    var currentCellData = await getCurrentCellData();
+    List<List> entries = ModelService().getPredictableList(currentCellData);
     var test = await ModelService().predictDecisionTree(entries);
-    log('predict result : ' + test.toString());
+    print('predict result : ' + test.toString());
   }
 
   void getAllAccident() async {
