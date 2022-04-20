@@ -1,4 +1,6 @@
 import 'dart:developer';
+import 'dart:html';
+import 'dart:ui' as ui;
 import 'package:csv/csv.dart' as csv;
 
 import 'package:flutter/material.dart';
@@ -26,12 +28,21 @@ class _MapScreenState extends State<MapScreen> {
 
   late List<List> roadData;
 
+  late List<List> road1in;
+  late List<List> road1out;
+  late List<List> road2in;
+  late List<List> road2out;
+  late List<List> road7in;
+  late List<List> road7out;
+
+  final screens = [];
+
   @override
   void initState() {
     super.initState();
     loadRoadData();
+    getCurrentCellData().whenComplete(() => predictAccident());
     getAllAccident();
-    predictAccident();
   }
 
   Future<void> loadRoadData() async {
@@ -42,22 +53,51 @@ class _MapScreenState extends State<MapScreen> {
     print('Loading road data complete\n\n\n');
   }
 
-  Future<List<List>> getCurrentCellData() async {
+  Future<void> getCurrentCellData() async {
     print('Start loading current cell data .....');
-    var currentCellData = await ModelService().getCurrentCellData(roadNo: 1);
+    var currentCellData = await ModelService().getCurrentCellData();
+    road1in = ModelService().filterRoad(currentCellData, 1, 'in');
+    road1out = ModelService().filterRoad(currentCellData, 1, 'out');
+    road2in = ModelService().filterRoad(currentCellData, 2, 'in');
+    road2out = ModelService().filterRoad(currentCellData, 2, 'out');
+    road7in = ModelService().filterRoad(currentCellData, 7, 'in');
+    road7out = ModelService().filterRoad(currentCellData, 7, 'out');
+
+    road1in = ModelService().getPredictableList(road1in);
+    road1out = ModelService().getPredictableList(road1out);
+    road2in = ModelService().getPredictableList(road2in);
+    road2out = ModelService().getPredictableList(road2out);
+    road7in = ModelService().getPredictableList(road7in);
+    road7out = ModelService().getPredictableList(road7out);
+
     print('Loading current cell data complete\n\n\n');
     //var entries = ModelService().getPredictableList(currentCellData);
-    print("current cell data [0-4] : " + currentCellData.take(5).toString());
-    // log("entries : " + entries.toString());
+    //print("current cell data : " + currentCellData.toString());
+    //print("entries : " + road7out.toString());
     // log("entries length : " + entries.length.toString());
-    return currentCellData;
   }
 
   void predictAccident() async {
-    var currentCellData = await getCurrentCellData();
-    List<List> entries = ModelService().getPredictableList(currentCellData);
-    var test = await ModelService().predictDecisionTree(entries);
-    print('predict result : ' + test.toString());
+    //var currentCellData = await getCurrentCellData();
+    var token = await ModelService().getToken();
+    var predictedroad1in =
+        await ModelService().predictDecisionTree(token, road1in, 1, 'in');
+    var predictedroad1out =
+        await ModelService().predictDecisionTree(token, road1out, 1, 'out');
+    var predictedroad2in =
+        await ModelService().predictDecisionTree(token, road2in, 2, 'in');
+    var predictedroad2out =
+        await ModelService().predictDecisionTree(token, road2out, 2, 'out');
+    var predictedroad7in =
+        await ModelService().predictDecisionTree(token, road7in, 7, 'in');
+    var predictedroad7out =
+        await ModelService().predictDecisionTree(token, road7out, 7, 'out');
+    print('predict result 1 in: ' + predictedroad1in.toString());
+    print('predict result 1 out: ' + predictedroad1out.toString());
+    print('predict result 2 in: ' + predictedroad2in.toString());
+    print('predict result 2 out: ' + predictedroad2out.toString());
+    print('predict result 7 in: ' + predictedroad7in.toString());
+    print('predict result 7 out: ' + predictedroad7out.toString());
   }
 
   void getAllAccident() async {
@@ -67,6 +107,17 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     late GoogleMapController mapController;
+
+    // ignore: undefined_prefixed_name
+    ui.platformViewRegistry.registerViewFactory(
+      'twitter',
+      (int uid) {
+        IFrameElement _iFrame = IFrameElement()..src = "web/twitter.html";
+        _iFrame.style.border = "none";
+        return _iFrame;
+      },
+    );
+
     List<DropdownMenuItem<String>> roadItems = [
       'Show All',
       'Road Number 1',
@@ -400,70 +451,92 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
         Flexible(
-          flex: 7,
-          child: Stack(
-            children: [
-              FutureBuilder(
-                future: accidents,
-                builder: (context, AsyncSnapshot<List<Accident>> snapshot) {
-                  if (snapshot.hasData) {
-                    List<Accident> accidentList = snapshot.data!;
-                    accidentList.forEach((element) {
-                      myMarker.add(Marker(
-                        markerId: MarkerId(element.accidentId.toString()),
-                        position: LatLng(element.lat!, element.lon!),
-                        onTap: () {
-                          setState(() {});
+            flex: 7,
+            child: Stack(
+              children: [
+                Stack(
+                  children: [
+                    Offstage(
+                      offstage: !_isSelectRealtime,
+                      child: FutureBuilder(
+                        future: accidents,
+                        builder:
+                            (context, AsyncSnapshot<List<Accident>> snapshot) {
+                          if (snapshot.hasData) {
+                            List<Accident> accidentList = snapshot.data!;
+                            accidentList.forEach((element) {
+                              myMarker.add(Marker(
+                                markerId:
+                                    MarkerId(element.accidentId.toString()),
+                                position: LatLng(element.lat!, element.lon!),
+                                onTap: () {
+                                  setState(() {});
+                                },
+                              ));
+                            });
+                            return GoogleMap(
+                              onMapCreated: _onMapCreated,
+                              //mapType: MapType.satellite,
+                              initialCameraPosition: CameraPosition(
+                                target: _center,
+                                zoom: 11.0,
+                              ),
+                              markers: myMarker.toSet(),
+                            );
+                          } else {
+                            return Center(child: CircularProgressIndicator());
+                          }
                         },
-                      ));
-                    });
-                    return GoogleMap(
-                      onMapCreated: _onMapCreated,
-                      //mapType: MapType.satellite,
-                      initialCameraPosition: CameraPosition(
-                        target: _center,
-                        zoom: 11.0,
                       ),
-                      markers: myMarker.toSet(),
-                    );
-                  } else {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                },
-              ),
-              Builder(builder: (context) {
-                if (_isShowInfo) {
-                  return Container(
-                    margin: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
+                    ),
+                    Builder(builder: (context) {
+                      if (_isShowInfo) {
+                        return Container(
+                          margin: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).accentColor,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                offset: Offset(0.0, 1.0), //(x,y)
+                                blurRadius: 2.0,
+                              ),
+                            ],
+                          ),
+                          height: 300,
+                          width: 300,
+                          child: Center(
+                            child: Text(
+                              'ToolTip',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        );
+                      } else {
+                        return Container();
+                      }
+                    }),
+                  ],
+                ),
+                Offstage(
+                    offstage: _isSelectRealtime,
+                    child: Container(
+                      padding: EdgeInsets.all(40),
                       color: Theme.of(context).accentColor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          offset: Offset(0.0, 1.0), //(x,y)
-                          blurRadius: 2.0,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.all(
+                          const Radius.circular(40.0),
                         ),
-                      ],
-                    ),
-                    height: 300,
-                    width: 300,
-                    child: Center(
-                      child: Text(
-                        'ToolTip',
-                        style: TextStyle(
-                          color: Colors.white,
+                        child: HtmlElementView(
+                          viewType: "twitter",
                         ),
                       ),
-                    ),
-                  );
-                } else {
-                  return Container();
-                }
-              }),
-            ],
-          ),
-        )
+                    ))
+              ],
+            ))
       ],
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:html';
 
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:flutter/services.dart';
@@ -68,12 +69,44 @@ class ModelService {
     return result['access_token'];
   }
 
-  Future<Map<String, dynamic>> predictDecisionTree(List<List> entries) async {
+  Future<Map<String, dynamic>> predictDecisionTree(
+      String token, List<List> entries, int road, String direction) async {
     //var token = await getToken();
-    var token = await getToken();
 
-    var url =
-        'https://us-central1-aiplatform.googleapis.com/v1/projects/trafficanomalyflutter/locations/us-central1/endpoints/667843362711142400:predict';
+    var url = '';
+
+    if (road == 1) {
+      if (direction == 'in') {
+        url =
+            'https://us-central1-aiplatform.googleapis.com/v1/projects/trafficanomalyflutter/locations/us-central1/endpoints/1586648055438901248:predict';
+      } else if (direction == 'out') {
+        url =
+            'https://us-central1-aiplatform.googleapis.com/v1/projects/trafficanomalyflutter/locations/us-central1/endpoints/6942553912289263616:predict';
+      } else {
+        return {};
+      }
+    } else if (road == 2) {
+      if (direction == 'in') {
+        url =
+            'https://us-central1-aiplatform.googleapis.com/v1/projects/trafficanomalyflutter/locations/us-central1/endpoints/8369069094258868224:predict';
+      } else if (direction == 'out') {
+        url =
+            'https://us-central1-aiplatform.googleapis.com/v1/projects/trafficanomalyflutter/locations/us-central1/endpoints/1717252444632645632:predict';
+      } else {
+        return {};
+      }
+    } else if (road == 7) {
+      if (direction == 'in') {
+        url =
+            'https://us-central1-aiplatform.googleapis.com/v1/projects/trafficanomalyflutter/locations/us-central1/endpoints/4023095453846339584:predict';
+      } else if (direction == 'out') {
+        url =
+            'https://us-central1-aiplatform.googleapis.com/v1/projects/trafficanomalyflutter/locations/us-central1/endpoints/3326163411510755328:predict';
+      } else {
+        return {};
+      }
+    } else {}
+
     var body = json.encode({
       'instances': entries,
     });
@@ -89,11 +122,11 @@ class ModelService {
       },
       body: body,
     );
-
+    //print('body: ' + body);
     return json.decode(response.body);
   }
 
-  Future<List<List>> getCurrentCellData({int? roadNo = null}) async {
+  Future<List<List>> getCurrentCellData() async {
     var csvfile = await Http.get(Uri.parse(
         'http://analytics2.dlt.transcodeglobal.com/cell_data/current_celldata.csv'));
     csv.CsvToListConverter converter = new csv.CsvToListConverter(eol: '\n');
@@ -101,22 +134,32 @@ class ModelService {
         converter.convert(csvfile.body, shouldParseNumbers: true);
 
     // the csv file is converted to a 2-Dimensional list
-    if (roadNo != null) {
-      listCreated.removeWhere((element) => element.elementAt(1) != roadNo);
-    }
 
-    //['all_units', 'inflow_units','avg_speed', 'max_speed','max_traveltime']
-    //[4,5,8,9,11]
     return listCreated;
+  }
+
+  List<List> filterRoad(List<List> celldata, int roadNo, String direction) {
+    var filteredRoad = [...celldata];
+
+    filteredRoad.removeWhere((element) => element.elementAt(1) != roadNo);
+    filteredRoad.removeWhere((element) => element.elementAt(3) != direction);
+    return filteredRoad;
   }
 
   List<List> getPredictableList(List<List> list) {
     var tempList = [...list];
     List<List> newList = [];
+    // [
+    //   'all_units',
+    //   'inflow_units',
+    //   'avg_speed',
+    //   'max_speed',
+    //   'avg_traveltime',
+    //   "max_traveltime"
+    // ];
     tempList.forEach((List element) {
       element.removeRange(0, 4);
       element.removeRange(2, 4);
-      element.removeAt(4);
       newList.add(element);
     });
     return newList;
