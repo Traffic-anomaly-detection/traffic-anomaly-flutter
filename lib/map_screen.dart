@@ -1,14 +1,11 @@
-import 'dart:developer';
 import 'dart:html';
 import 'dart:ui' as ui;
-import 'package:csv/csv.dart' as csv;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:traffic_anomaly_app/accident.dart';
-import 'package:traffic_anomaly_app/modelService.dart';
 import 'accidentService.dart';
 
 class MapScreen extends StatefulWidget {
@@ -20,99 +17,61 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final LatLng _center = const LatLng(13.729273, 100.775390);
-  var myMarker = <Marker>[];
+
   String _selectedRoad = 'Show All';
+  String _selectedDirection = 'Show All';
   bool _isSelectRealtime = true;
   bool _isShowInfo = false;
-  late Future<List<Accident>> accidents;
-
-  late List<List> roadData;
-
-  late List<List> road1in;
-  late List<List> road1out;
-  late List<List> road2in;
-  late List<List> road2out;
-  late List<List> road7in;
-  late List<List> road7out;
+  Future<List<Accident>>? accidents;
 
   final screens = [];
 
   @override
   void initState() {
     super.initState();
-    loadRoadData();
-    getCurrentCellData().whenComplete(() => predictAccident());
-    getAllAccident();
+    getAccident();
   }
 
-  Future<void> loadRoadData() async {
-    print('Start loading road coordinates .....');
-
-    roadData = await ModelService().getRoadData();
-
-    print('Loading road data complete\n\n\n');
+  void onChangeRoad(String value) {
+    setState(() {
+      _selectedRoad = value;
+    });
   }
 
-  Future<void> getCurrentCellData() async {
-    print('Start loading current cell data .....');
-    var currentCellData = await ModelService().getCurrentCellData();
-    road1in = ModelService().filterRoad(currentCellData, 1, 'in');
-    road1out = ModelService().filterRoad(currentCellData, 1, 'out');
-    road2in = ModelService().filterRoad(currentCellData, 2, 'in');
-    road2out = ModelService().filterRoad(currentCellData, 2, 'out');
-    road7in = ModelService().filterRoad(currentCellData, 7, 'in');
-    road7out = ModelService().filterRoad(currentCellData, 7, 'out');
-
-    road1in = ModelService().getPredictableList(road1in);
-    road1out = ModelService().getPredictableList(road1out);
-    road2in = ModelService().getPredictableList(road2in);
-    road2out = ModelService().getPredictableList(road2out);
-    road7in = ModelService().getPredictableList(road7in);
-    road7out = ModelService().getPredictableList(road7out);
-
-    print('Loading current cell data complete\n\n\n');
-    //var entries = ModelService().getPredictableList(currentCellData);
-    //print("current cell data : " + currentCellData.toString());
-    //print("entries : " + road7out.toString());
-    // log("entries length : " + entries.length.toString());
+  void onChangeDirection(String value) {
+    setState(() {
+      _selectedDirection = value;
+    });
   }
 
-  void predictAccident() async {
-    //var currentCellData = await getCurrentCellData();
-    var token = await ModelService().getToken();
-    var predictedroad1in =
-        await ModelService().predictDecisionTree(token, road1in, 1, 'in');
-    var predictedroad1out =
-        await ModelService().predictDecisionTree(token, road1out, 1, 'out');
-    var predictedroad2in =
-        await ModelService().predictDecisionTree(token, road2in, 2, 'in');
-    var predictedroad2out =
-        await ModelService().predictDecisionTree(token, road2out, 2, 'out');
-    var predictedroad7in =
-        await ModelService().predictDecisionTree(token, road7in, 7, 'in');
-    var predictedroad7out =
-        await ModelService().predictDecisionTree(token, road7out, 7, 'out');
-    print('predict result 1 in: ' + predictedroad1in.toString());
-    print('predict result 1 out: ' + predictedroad1out.toString());
-    print('predict result 2 in: ' + predictedroad2in.toString());
-    print('predict result 2 out: ' + predictedroad2out.toString());
-    print('predict result 7 in: ' + predictedroad7in.toString());
-    print('predict result 7 out: ' + predictedroad7out.toString());
-  }
-
-  void getAllAccident() async {
-    accidents = AccidentService().getAllAccident();
+  void getAccident([int? value]) async {
+    if (value == null) {
+      setState(() {
+        accidents = AccidentService().getAllAccident();
+      });
+    } else {
+      setState(() {
+        accidents = AccidentService().getNAccident(value);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     late GoogleMapController mapController;
+    var myMarker = <Marker>[];
+    var beforeMin =
+        DateTime.now().subtract(Duration(minutes: 5)).add(Duration(hours: 7));
 
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(
       'twitter',
       (int uid) {
-        IFrameElement _iFrame = IFrameElement()..src = "web/twitter.html";
+        IFrameElement _iFrame = IFrameElement()
+          ..src = "web/twitter.html"
+          ..style.width = '100%'
+          ..style.height = '100%';
+
         _iFrame.style.border = "none";
         return _iFrame;
       },
@@ -122,6 +81,21 @@ class _MapScreenState extends State<MapScreen> {
       'Show All',
       'Road Number 1',
       'Road Number 2',
+      'Road Number 7',
+    ].map<DropdownMenuItem<String>>((String value) {
+      return DropdownMenuItem<String>(
+        value: value,
+        child: Text(
+          value,
+          style: TextStyle(fontSize: 14, color: Colors.white),
+        ),
+      );
+    }).toList();
+
+    List<DropdownMenuItem<String>> directionItems = [
+      'Show All',
+      'In',
+      'Out',
     ].map<DropdownMenuItem<String>>((String value) {
       return DropdownMenuItem<String>(
         value: value,
@@ -145,6 +119,55 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
       );
+    }
+
+    List<Accident> filterResult(List<Accident> accidentList,
+        String selectedRoad, String selectedDirection) {
+      List<Accident> newList = [];
+      print(accidentList.length.toString());
+      newList = accidentList
+          .where((element) => element.dateTime!.isAfter(beforeMin))
+          .toList();
+      // print(accidentList[0].dateTime!.isUtc.toString());
+      // print(beforeMin.isUtc.toString());
+
+      // print(accidentList[0].dateTime!.toString());
+      // print(beforeMin.toUtc().toString());
+      // // print(accidentList[100].dateTime!.timeZoneName);
+      // // print(accidentList.length.toString());
+      // print(newList.length.toString());
+
+      if (selectedRoad == 'Show All') {
+        if (selectedDirection == 'Show All') {
+          return newList;
+        } else {
+          newList = newList
+              .where((element) =>
+                  element.direction.toString() ==
+                  selectedDirection.toLowerCase())
+              .toList();
+        }
+      } else {
+        newList = newList.where((element) {
+          if (selectedDirection == 'Show All') {
+            if (('Road Number ' + element.roadNo.toString()) == _selectedRoad) {
+              return true;
+            } else {
+              return false;
+            }
+          } else {
+            if (element.direction.toString() ==
+                    selectedDirection.toLowerCase() &&
+                ('Road Number ' + element.roadNo.toString()) == _selectedRoad) {
+              return true;
+            } else {
+              return false;
+            }
+          }
+        }).toList();
+      }
+
+      return newList;
     }
 
     return Row(
@@ -187,30 +210,6 @@ class _MapScreenState extends State<MapScreen> {
                     color: Theme.of(context).accentColor,
                     thickness: 3,
                   ),
-                  // Container(
-                  //     decoration: BoxDecoration(
-                  //         border: Border.all(
-                  //             color: Theme.of(context).primaryColor, width: 3),
-                  //         borderRadius: BorderRadius.circular(10)),
-                  //     child: Container(
-                  //       margin: EdgeInsets.symmetric(horizontal: 10),
-                  //       child: TextField(
-                  //         decoration: InputDecoration(border: InputBorder.none),
-                  //       ),
-                  //     )),
-                  // SizedBox(height: 10),
-                  // Container(
-                  //   padding: EdgeInsets.all(5),
-                  //   decoration: BoxDecoration(
-                  //       color: Theme.of(context).primaryColor,
-                  //       borderRadius: BorderRadius.circular(3)),
-                  //   width: MediaQuery.of(context).size.width,
-                  //   child: Center(
-                  //       child: Text(
-                  //     'Search',
-                  //     style: TextStyle(color: Colors.white),
-                  //   )),
-                  // ),
                   SizedBox(height: 10),
                   Text(
                     'Road Number',
@@ -242,9 +241,44 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                           items: roadItems,
                           onChanged: (value) {
-                            setState(() {
-                              _selectedRoad = value as String;
-                            });
+                            onChangeRoad(value as String);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Road direction',
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xff868EF2),
+                        fontWeight: FontWeight.normal),
+                  ),
+
+                  SizedBox(height: 10),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).accentColor,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(
+                        canvasColor: Theme.of(context).accentColor,
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton(
+                          value: _selectedDirection,
+                          isExpanded: true,
+                          isDense: true,
+                          icon: FaIcon(
+                            FontAwesomeIcons.arrowDown,
+                            color: Color(0xff868EF2),
+                            size: 16,
+                          ),
+                          items: directionItems,
+                          onChanged: (value) {
+                            onChangeDirection(value as String);
                           },
                         ),
                       ),
@@ -277,16 +311,65 @@ class _MapScreenState extends State<MapScreen> {
                               AsyncSnapshot<List<Accident>> snapshot) {
                             if (snapshot.hasData) {
                               List<Accident> accidentList = snapshot.data!;
+                              List<Accident> showList = filterResult(
+                                  accidentList,
+                                  _selectedRoad,
+                                  _selectedDirection);
                               return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          'Result after : ',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 20,
+                                      ),
+                                      Flexible(
+                                        child: Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                              color: Theme.of(context)
+                                                  .primaryColor),
+                                          child: Text(
+                                            '${DateFormat('yyyy-MM-dd - kk:mm').format(beforeMin.subtract(Duration(hours: 7)))}',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   Divider(
                                     color: Color(0xff868EF2),
                                     thickness: 3,
                                   ),
-                                  Expanded(
-                                    child: ListView.builder(
+                                  if (showList.isEmpty) ...[
+                                    Expanded(
+                                      child: Center(
+                                        child: Text(
+                                          'Anomaly Not found !',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24),
+                                        ),
+                                      ),
+                                    )
+                                  ] else ...[
+                                    Expanded(
+                                      child: ListView.separated(
+                                        physics: BouncingScrollPhysics(),
                                         shrinkWrap: true,
-                                        itemCount: accidentList.length,
+                                        itemCount: showList.length,
                                         // separatorBuilder: (context, index) {
                                         //   return Divider();
                                         // },
@@ -297,13 +380,41 @@ class _MapScreenState extends State<MapScreen> {
                                                 VisualDensity(vertical: -4),
                                             leading:
                                                 FaIcon(FontAwesomeIcons.car),
-                                            title: Text(
-                                              accidentList[index]
-                                                  .accidentId
-                                                  .toString(),
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12),
+                                            contentPadding: EdgeInsets.zero,
+                                            title: Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    'Road No. ${showList[index].roadNo} at Km. ${showList[index].km}',
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 20,
+                                                ),
+                                                Flexible(
+                                                  child: Container(
+                                                    padding: EdgeInsets.all(5),
+                                                    decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(15),
+                                                        color:
+                                                            Color(0xff868EF2)),
+                                                    child: Text(
+                                                      showList[index]
+                                                          .dateTime
+                                                          .toString()
+                                                          .substring(0, 16),
+                                                      style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 12),
+                                                    ),
+                                                  ),
+                                                )
+                                              ],
                                             ),
                                             trailing: Container(
                                               decoration: BoxDecoration(
@@ -327,15 +438,20 @@ class _MapScreenState extends State<MapScreen> {
                                                 ),
                                                 onPressed: () {
                                                   _gotoThisPosition(LatLng(
-                                                      accidentList[index].lat!,
-                                                      accidentList[index]
-                                                          .lon!));
+                                                      showList[index].lat!,
+                                                      showList[index].lon!));
                                                 },
                                               ),
                                             ),
                                           );
-                                        }),
-                                  ),
+                                        },
+                                        separatorBuilder:
+                                            (BuildContext context, int index) {
+                                          return Divider();
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                   Divider(
                                     color: Color(0xff868EF2),
                                     thickness: 3,
@@ -355,7 +471,7 @@ class _MapScreenState extends State<MapScreen> {
                                           ),
                                         ),
                                         Text(
-                                          accidentList.length.toString(),
+                                          showList.length.toString(),
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 20,
@@ -401,7 +517,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'Accident History',
+                                'Anomaly News',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Colors.white),
                                 maxLines: 2,
@@ -464,8 +580,23 @@ class _MapScreenState extends State<MapScreen> {
                             (context, AsyncSnapshot<List<Accident>> snapshot) {
                           if (snapshot.hasData) {
                             List<Accident> accidentList = snapshot.data!;
-                            accidentList.forEach((element) {
+                            List<Accident> showList = filterResult(accidentList,
+                                _selectedRoad, _selectedDirection);
+                            showList.forEach((element) {
                               myMarker.add(Marker(
+                                infoWindow: InfoWindow(
+                                    title: 'Anomaly on road ' +
+                                        element.roadNo.toString() +
+                                        ' at km. ' +
+                                        element.km.toString(),
+                                    snippet: 'Location at ' +
+                                        element.lat.toString() +
+                                        ', ' +
+                                        element.lon.toString() +
+                                        '\n\n , Detected at ' +
+                                        element.dateTime
+                                            .toString()
+                                            .substring(0, 16)),
                                 markerId:
                                     MarkerId(element.accidentId.toString()),
                                 position: LatLng(element.lat!, element.lon!),
@@ -476,6 +607,7 @@ class _MapScreenState extends State<MapScreen> {
                             });
                             return GoogleMap(
                               onMapCreated: _onMapCreated,
+                              trafficEnabled: false,
                               //mapType: MapType.satellite,
                               initialCameraPosition: CameraPosition(
                                 target: _center,
@@ -507,10 +639,17 @@ class _MapScreenState extends State<MapScreen> {
                           height: 300,
                           width: 300,
                           child: Center(
-                            child: Text(
-                              'ToolTip',
-                              style: TextStyle(
-                                color: Colors.white,
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Disclaimer : This application is a graduation projects of the students of King Mongkut\'s Institute of Technology Ladkrabang. This only for educational purpose and in still on beta state. The result of this program only a prediction of machine learning model. ',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -525,7 +664,7 @@ class _MapScreenState extends State<MapScreen> {
                     offstage: _isSelectRealtime,
                     child: Container(
                       padding: EdgeInsets.all(40),
-                      color: Theme.of(context).accentColor,
+                      color: Colors.black12,
                       child: ClipRRect(
                         borderRadius: BorderRadius.all(
                           const Radius.circular(40.0),

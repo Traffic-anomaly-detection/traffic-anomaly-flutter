@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'longdo_map_screen.dart';
 import 'map_screen.dart';
 
 class NavScreen extends StatefulWidget {
@@ -11,14 +9,6 @@ class NavScreen extends StatefulWidget {
 }
 
 class _NavScreenState extends State<NavScreen> {
-  int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +16,7 @@ class _NavScreenState extends State<NavScreen> {
       // appBar: AppBar(
       //   title: const Text('Traffic Anomaly Detector'),
       // ),
-      body: _selectedIndex == 0 ? const MapScreen() : const LongdoMapScreen(),
+      body: const MapScreen(),
       // bottomNavigationBar: BottomNavigationBar(
       //   items: const <BottomNavigationBarItem>[
       //     BottomNavigationBarItem(
