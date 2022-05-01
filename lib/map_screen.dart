@@ -18,6 +18,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final LatLng _center = const LatLng(13.729273, 100.775390);
 
+  late GoogleMapController mapController;
   String _selectedRoad = 'Show All';
   String _selectedDirection = 'Show All';
   bool _isSelectRealtime = true;
@@ -58,7 +59,6 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    late GoogleMapController mapController;
     var myMarker = <Marker>[];
     var beforeMin =
         DateTime.now().subtract(Duration(minutes: 5)).add(Duration(hours: 7));
