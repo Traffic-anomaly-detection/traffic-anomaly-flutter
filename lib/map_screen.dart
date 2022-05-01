@@ -494,73 +494,73 @@ class _MapScreenState extends State<MapScreen> {
                   SizedBox(
                     height: 30,
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              _isSelectRealtime = false;
-                            });
-                          },
-                          child: Container(
-                            height: 50,
-                            padding: EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 15),
-                            decoration: BoxDecoration(
-                              color: _isSelectRealtime
-                                  ? Theme.of(context).accentColor
-                                  : Color(0xff868EF2),
-                              borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  bottomLeft: Radius.circular(10)),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Anomaly News',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white),
-                                maxLines: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              _isSelectRealtime = true;
-                            });
-                          },
-                          child: Container(
-                            height: 50,
-                            padding: EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 15),
-                            decoration: BoxDecoration(
-                              color: _isSelectRealtime
-                                  ? Color(0xff868EF2)
-                                  : Theme.of(context).accentColor,
-                              borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(10),
-                                  bottomRight: Radius.circular(10)),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Real-time Prediction',
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 30,
-                  )
+                  // Row(
+                  //   children: [
+                  //     Expanded(
+                  //       child: InkWell(
+                  //         onTap: () {
+                  //           setState(() {
+                  //             _isSelectRealtime = false;
+                  //           });
+                  //         },
+                  //         child: Container(
+                  //           height: 50,
+                  //           padding: EdgeInsets.symmetric(
+                  //               vertical: 10, horizontal: 15),
+                  //           decoration: BoxDecoration(
+                  //             color: _isSelectRealtime
+                  //                 ? Theme.of(context).accentColor
+                  //                 : Color(0xff868EF2),
+                  //             borderRadius: BorderRadius.only(
+                  //                 topLeft: Radius.circular(10),
+                  //                 bottomLeft: Radius.circular(10)),
+                  //           ),
+                  //           child: Center(
+                  //             child: Text(
+                  //               'Anomaly News',
+                  //               textAlign: TextAlign.center,
+                  //               style: TextStyle(color: Colors.white),
+                  //               maxLines: 2,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     Expanded(
+                  //       child: InkWell(
+                  //         onTap: () {
+                  //           setState(() {
+                  //             _isSelectRealtime = true;
+                  //           });
+                  //         },
+                  //         child: Container(
+                  //           height: 50,
+                  //           padding: EdgeInsets.symmetric(
+                  //               vertical: 10, horizontal: 15),
+                  //           decoration: BoxDecoration(
+                  //             color: _isSelectRealtime
+                  //                 ? Color(0xff868EF2)
+                  //                 : Theme.of(context).accentColor,
+                  //             borderRadius: BorderRadius.only(
+                  //                 topRight: Radius.circular(10),
+                  //                 bottomRight: Radius.circular(10)),
+                  //           ),
+                  //           child: Center(
+                  //             child: Text(
+                  //               'Real-time Prediction',
+                  //               maxLines: 2,
+                  //               textAlign: TextAlign.center,
+                  //               style: TextStyle(color: Colors.white),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  // SizedBox(
+                  //   height: 30,
+                  // )
                 ],
               ),
             ),
