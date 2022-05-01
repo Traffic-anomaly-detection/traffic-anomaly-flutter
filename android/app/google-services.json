@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1010599694991",
+    "firebase_url": "https://traffic-anomaly-detection-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "traffic-anomaly-detection",
+    "storage_bucket": "traffic-anomaly-detection.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010599694991:android:0eb776861f5476ec6716fa",
+        "android_client_info": {
+          "package_name": "com.example.traffic_anomaly_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1010599694991-l7blusd4hdf9s1mggbqdmjou9oa65vec.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBtYMDfk83cdbXGFhUhOS82a799Uk3pmQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1010599694991-l7blusd4hdf9s1mggbqdmjou9oa65vec.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

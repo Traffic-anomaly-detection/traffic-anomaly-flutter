@@ -15,13 +15,17 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-          primaryColor: const Color(0xffAAAAAA),
-          appBarTheme: const AppBarTheme(
-            color: Color(0xff4056CB),
-          ),
-          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-            selectedItemColor: Color(0xff4056CB),
-          )),
+        primaryColor: const Color(0xff242E8C),
+        accentColor: const Color(0xff414BB1),
+        brightness: Brightness.light,
+
+        // appBarTheme: const AppBarTheme(
+        //   color: Color(0xff4056CB),
+        // ),
+        // bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        //   selectedItemColor: Color(0xff4056CB),
+        // ),
+      ),
       home: const NavScreen(),
     );
   }
